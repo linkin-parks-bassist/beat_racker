@@ -8,4 +8,6 @@
 
 int i2s_install();
 
+void mic_read_task(void *params);
+
 #endif
