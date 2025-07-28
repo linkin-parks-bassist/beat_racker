@@ -4,7 +4,7 @@
 
 > **Beatrice**: a pun on *ricing* (**slang:** adding LEDs to things) and "beat" + "rice".
 
-### Demo Video
+Click the GIF below for a short demo video.
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=R6wnha9A4r0">
