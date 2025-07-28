@@ -22,8 +22,8 @@ Notably, **Beatrice** works quite well with "noisier" genres such as rock and me
 
 ## Requirements
 
-- ESP-IDF v5+
-- KISS FFT (included as submodule or source)
+- [ESP-IDF v5+](https://github.com/espressif/esp-idf)
+- Kiss FFT (included)
 - Python (for flashing)
 
 ## Build and Flash
