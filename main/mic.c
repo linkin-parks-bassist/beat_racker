@@ -1,7 +1,8 @@
-#include "freertos/FreeRTOS.h"
-#include "freertos/queue.h"
-#include "freertos/task.h"
-#include "esp_timer.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/task.h>
+#include <esp_timer.h>
+#include <assert.h>
 
 #include "driver/i2s.h"
 
@@ -9,9 +10,11 @@
 #include "buffers.h"
 #include "mic.h"
 
-const TickType_t buffer_duration_ticks = (const TickType_t)((BUFFER_DURATION_SEC * 1000) / portTICK_PERIOD_MS);
+QueueHandle_t data_queue;
 
-int i2s_install()
+static const TickType_t buffer_duration_ticks = (const TickType_t)((BUFFER_DURATION_SEC * 1000) / portTICK_PERIOD_MS);
+
+int init_mic()
 {
     i2s_config_t i2s_config = {
             .mode                   = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
@@ -39,13 +42,15 @@ int i2s_install()
     i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
     i2s_set_pin(I2S_NUM_0, &pin_config);
     
+    // Initialise data queue
+    data_queue = xQueueCreate(N_BUFFERS, sizeof(sample_t*));
+    
     return 0;
 }
 
 int read_from_mic(sample_t *buffer)
 {
-	if (!buffer)
-		return -1;
+	assert(buffer != NULL);
 	
 	size_t bytes_read;
 	int error = i2s_read(I2S_NUM_0, buffer, BUFFER_SIZE * sizeof(sample_t), &bytes_read, portMAX_DELAY);
@@ -53,39 +58,19 @@ int read_from_mic(sample_t *buffer)
 	if (error == ESP_OK)
 		return (int)bytes_read;
 	else
-		return -2;
+		return -1;
 }
 
 void mic_read_task(void *params)
 {
-	printf("Mic reading task begin\n");
 	TickType_t last_wake_time = xTaskGetTickCount();
 	sample_t *buffer;
 	
-	int64_t buffer_get_duration;
-	int64_t send_duration;
-	int64_t read_duration;
-	int64_t loop_start;
-	
 	while (true)
 	{
-		loop_start = esp_timer_get_time();
-		do {
-			buffer = get_buffer();
-			//printf("Got a buffer pointer: %d\n", (int)buffer);
-		} while (!buffer);
-		buffer_get_duration = esp_timer_get_time() - loop_start;
-		
-		read_duration = esp_timer_get_time();
+		do {buffer = get_buffer();} while (!buffer);
 		read_from_mic(buffer);
-		read_duration = esp_timer_get_time() - read_duration;
-		
-		
-		send_duration = esp_timer_get_time();
 		xQueueSend(data_queue, &buffer, buffer_duration_ticks);
-		send_duration = esp_timer_get_time() - send_duration;
-		
-		//printf("Mic read loop done; getting buffer took %lld us, reading from mic took %lld us, sending buffer took %lld us. Total: %lld\n", buffer_get_duration, read_duration, send_duration, esp_timer_get_time() - loop_start);
 		vTaskDelayUntil(&last_wake_time, buffer_duration_ticks);
 	}
 }

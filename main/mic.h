@@ -6,8 +6,10 @@
 #define I2S_WS   25
 #define I2S_SD   32
 
-int i2s_install();
+int init_mic();
 
 void mic_read_task(void *params);
+
+extern QueueHandle_t data_queue;
 
 #endif

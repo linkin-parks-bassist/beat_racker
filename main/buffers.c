@@ -4,8 +4,6 @@
 #include "buffers.h"
 #include "mic.h"
 
-#define N_BUFFERS 4
-
 sample_t buffers[BUFFER_SIZE][N_BUFFERS];
 
 sample_t *buffer_queue[N_BUFFERS];

@@ -2,6 +2,7 @@
 #define BUFFERS_H_
 
 #define BUFFER_SIZE 512
+#define N_BUFFERS 4
 
 #define BUFFER_DURATION_SEC (double)BUFFER_SIZE / (double)SAMPLE_RATE
 

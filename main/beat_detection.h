@@ -5,6 +5,4 @@ int init_beat_detection();
 
 void beat_detection_task(void *params);
 
-extern QueueHandle_t data_queue;
-
 #endif
