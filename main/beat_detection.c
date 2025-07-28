@@ -13,12 +13,12 @@
 
 #define ACTIVATION_THRESHOLD 			100.0
 #define RUNNING_AVG_ENERGY_ADAPT_RATE 	0.98
-#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.6
+#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.4
 #define RUNNING_AVG_SPECTRUM_ADAPT_RATE 0.5
-#define BEAT_THRESHOLD_ADAPT_RATE     	0.7
+#define BEAT_THRESHOLD_ADAPT_RATE     	0.6
 #define BEAT_THRESHOLD_SENSITISE_RATE 	0.9
-#define TIME_WEIGHT_EXPONENT 			2.5
-#define ANGLE_WEIGHT					1.3
+#define TIME_WEIGHT_EXPONENT 			3.0
+#define ANGLE_WEIGHT					1.15
 
 #define AMP_BASS_WEIGHT					1.5
 #define AMP_SNAP_WEIGHT					0.3
@@ -99,7 +99,7 @@ void init_angular_freq_weights()
 	{
 		frequency = FREQ(i);
 		
-		angular_freq_weights[i] = 2.0 * exp(-sqr(fabs(frequency - 80) /  30));
+		angular_freq_weights[i] = 2.0 * exp(-sqr(fabs(frequency - 80) /  25));
 		norm += sqr(angular_freq_weights[i]);
 		
 		amplitude_freq_weights[i]  = AMP_BASS_WEIGHT  * exp(-sqr(fabs(frequency -   65) /  50));
@@ -136,7 +136,7 @@ int init_beat_detection_state(beat_detection_state *bds)
 
 /* Take raw data from the mic and copy it into the designated 
  * array of double-precision floats, while also normalising 
- * the values to lie in the interval [0, 1] */
+ * the values to lie in the interval [-1, 1]. */
 int copy_and_convert_buffer(int32_t *buffer, double *frame)
 {
 	assert(buffer != NULL);
@@ -167,10 +167,6 @@ void beat_detection_task(void *params)
 	// Fourier transform of frame
 	double spectrum[BUFFER_SIZE];
 	
-	int64_t beat_detection_duration;
-	int64_t queue_wait;
-	int64_t loop_start_time;
-	
 	// Initialising things
 	kiss_fft_cfg kiss_fft_config = kiss_fft_alloc(BUFFER_SIZE, 0, 0, 0);
 	
@@ -182,11 +178,8 @@ void beat_detection_task(void *params)
 	// The main loop
 	while (true)
 	{
-		loop_start_time = esp_timer_get_time();
-		
 		// Get a fresh buffer of samples from the mic
 		xQueueReceive(data_queue, &buffer, portMAX_DELAY);
-		queue_wait = esp_timer_get_time() - loop_start_time;
 		
 		// Copy over and renormalise the raw data
 		copy_and_convert_buffer(buffer, frame);
@@ -194,23 +187,13 @@ void beat_detection_task(void *params)
 		// Return the buffer array to the queue
 		return_buffer(buffer);
 		
-		beat_detection_duration = esp_timer_get_time();
-		
 		// Run the fast Fourier transform
 		perform_fft(kiss_fft_config, frame, spectrum);
 		
 		// Self explanatory
 		if (beat_detected(&bds, frame, spectrum))
-		{
-			beat_detection_duration = esp_timer_get_time() - beat_detection_duration;
 			swap_leds();
-		}
-		else
-		{
-			beat_detection_duration = esp_timer_get_time() - beat_detection_duration;
-		}
-		
-		printf("Beat detection loop finished. xQueueReceive duration: %lld. beat detection: %lld. Total duration: %lld\n", queue_wait, beat_detection_duration, esp_timer_get_time() - loop_start_time);
+
 	}
 }
 
@@ -377,11 +360,9 @@ int beat_detected(beat_detection_state *bds, double *frame, double *spectrum)
 	// Update the frame energy running average
 	bds->frame_energy_running_avg = bds->frame_energy_running_avg * RUNNING_AVG_ENERGY_ADAPT_RATE + energy * (1 - RUNNING_AVG_ENERGY_ADAPT_RATE);
     
-    /* 
-     * If the energy, adjusted according to the time-based weighting, exceeds
-     * beat_threshold times the running average energy, a beat is detected!
-     * 
-     */
+    
+    /* If the energy, adjusted according to the time-based weighting, exceeds
+     * beat_threshold times the running average energy, a beat is detected! */
     
     if (bds->frame_energy_running_avg > 0.1) // Avoid division by small numbers
 		result = (energy * time_weighting) / bds->frame_energy_running_avg > bds->beat_threshold;
