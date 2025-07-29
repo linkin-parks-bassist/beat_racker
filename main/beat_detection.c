@@ -63,10 +63,9 @@ typedef struct
 	double running_avg_spectrum[BUFFER_SIZE / 2];
 } beat_detection_state;
 
-
 // Some forward-declarations
-int   beat_detected(beat_detection_state *bds, const double *frame, const double *spectrum);
-void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame, const double *spectrum);
+int  beat_detected(beat_detection_state *bds,  const double *frame, const double *spectrum);
+void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame,		  double *spectrum);
 
 // A handy macro for squaring things
 #define sqr(x) (x * x)
@@ -198,7 +197,7 @@ void beat_detection_task(void *params)
 }
 
 // Wrapper function for kiss fft
-void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame, const double *spectrum)
+void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame, double *spectrum)
 {
 	assert(frame 	!= NULL);
 	assert(spectrum != NULL);
@@ -248,7 +247,7 @@ double frame_energy(beat_detection_state *bds, const double *frame, const double
     double amp_energy = 0;
     
     // Weighted L^2-norms of the current spectrum and the running average spectrum
-    double weighted_spectrum_norm = 0.0;
+    double weighted_spectrum_norm 			  = 0.0;
     double running_avg_spectrum_weighted_norm = 0.0;
     
     // Weighted L^2 inner product of the current spectrum and the running average spectrum
