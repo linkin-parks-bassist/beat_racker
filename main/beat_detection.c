@@ -13,14 +13,14 @@
 
 #define ACTIVATION_THRESHOLD 			60.0
 #define RUNNING_AVG_ENERGY_ADAPT_RATE 	0.98
-#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.6
+#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.8
 #define RUNNING_AVG_SPECTRUM_ADAPT_RATE 0.5
-#define BEAT_THRESHOLD_ADAPT_RATE     	0.8
-#define BEAT_THRESHOLD_SENSITISE_RATE 	0.9
-#define TIME_WEIGHT_EXPONENT 			3.0
+#define BEAT_THRESHOLD_ADAPT_RATE     	0.9
+#define BEAT_THRESHOLD_SENSITISE_RATE 	0.95
+#define TIME_WEIGHT_EXPONENT 			3.5
 #define ANGLE_WEIGHT					1.2
 
-#define AMP_BASS_WEIGHT					2.0
+#define AMP_BASS_WEIGHT					1.5
 #define AMP_SNAP_WEIGHT					0.3
 #define AMP_CRACK_WEIGHT				0.1
 
@@ -101,7 +101,7 @@ void init_angular_freq_weights()
 		angular_freq_weights[i] = 2.0 * exp(-sqr(fabs(frequency - 80) /  25));
 		norm += sqr(angular_freq_weights[i]);
 		
-		amplitude_freq_weights[i]  = AMP_BASS_WEIGHT  * exp(-sqr(fabs(frequency -   65) /  50));
+		amplitude_freq_weights[i]  = AMP_BASS_WEIGHT  * exp(-sqr(fabs(frequency -   65) /  20));
         amplitude_freq_weights[i] += AMP_SNAP_WEIGHT  * exp(-sqr(fabs(frequency -  200) /  80));
         amplitude_freq_weights[i] += AMP_CRACK_WEIGHT * exp(-sqr(fabs(frequency - 1200) / 600));
 	}
@@ -313,7 +313,7 @@ double frame_energy(beat_detection_state *bds, const double *frame, const double
 
 double normalised_current_wait(double running_avg, double t)
 {
-	return running_avg + WAIT_NORMALISATION_FACTOR * erf(2.0 * (t/running_avg - 1.0));
+	return running_avg * (1 + WAIT_NORMALISATION_FACTOR * erf(2.0 * (t/running_avg - 1.0)));
 }
 
 void update_running_avg_wait(beat_detection_state *bds)
