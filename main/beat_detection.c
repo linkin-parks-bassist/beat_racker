@@ -11,16 +11,16 @@
 
 #define PI 3.14159265
 
-#define ACTIVATION_THRESHOLD 			100.0
+#define ACTIVATION_THRESHOLD 			60.0
 #define RUNNING_AVG_ENERGY_ADAPT_RATE 	0.98
-#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.4
+#define RUNNING_AVG_WAIT_ADAPT_RATE   	0.6
 #define RUNNING_AVG_SPECTRUM_ADAPT_RATE 0.5
-#define BEAT_THRESHOLD_ADAPT_RATE     	0.6
+#define BEAT_THRESHOLD_ADAPT_RATE     	0.8
 #define BEAT_THRESHOLD_SENSITISE_RATE 	0.9
 #define TIME_WEIGHT_EXPONENT 			3.0
-#define ANGLE_WEIGHT					1.15
+#define ANGLE_WEIGHT					1.2
 
-#define AMP_BASS_WEIGHT					1.5
+#define AMP_BASS_WEIGHT					2.0
 #define AMP_SNAP_WEIGHT					0.3
 #define AMP_CRACK_WEIGHT				0.1
 
@@ -65,8 +65,8 @@ typedef struct
 
 
 // Some forward-declarations
-int   beat_detected(beat_detection_state *bds, double *frame, double *spectrum);
-void perform_fft(kiss_fft_cfg kiss_fft_config, double *frame, double *spectrum);
+int   beat_detected(beat_detection_state *bds, const double *frame, const double *spectrum);
+void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame, const double *spectrum);
 
 // A handy macro for squaring things
 #define sqr(x) (x * x)
@@ -198,7 +198,7 @@ void beat_detection_task(void *params)
 }
 
 // Wrapper function for kiss fft
-void perform_fft(kiss_fft_cfg kiss_fft_config, double *frame, double *spectrum)
+void perform_fft(kiss_fft_cfg kiss_fft_config, const double *frame, const double *spectrum)
 {
 	assert(frame 	!= NULL);
 	assert(spectrum != NULL);
@@ -241,7 +241,7 @@ double cos_angle_weighting_factor(double cos_angle, double m)
 
 /* Calculate the ``energy'' of the given frame using the raw data (not actually used - but still passed
  * so that it is accessible, should modifications be made), the fft thereof, and the state struct. */
-double frame_energy(beat_detection_state *bds, double *frame, double *spectrum)
+double frame_energy(beat_detection_state *bds, const double *frame, const double *spectrum)
 {
 	/* The base energy number calculated from the amplitudes of 
 	 * frequencies, with weights from amplitude_freq_weights */
@@ -326,7 +326,7 @@ void update_running_avg_wait(beat_detection_state *bds)
 }
 
 // Update therunning average spectrum. Nothing fancy here. Just a simple convex combination
-void update_running_avg_spectrum(beat_detection_state *bds, double *spectrum)
+void update_running_avg_spectrum(beat_detection_state *bds, const double *spectrum)
 {
 	assert(spectrum != NULL);
 	
@@ -336,7 +336,7 @@ void update_running_avg_spectrum(beat_detection_state *bds, double *spectrum)
 }
 
 // The main beat detection function. Returns 0 if no beat detected, and 1 if a beat is detected
-int beat_detected(beat_detection_state *bds, double *frame, double *spectrum)
+int beat_detected(beat_detection_state *bds, const double *frame, const double *spectrum)
 {
 	assert(bds 		!= NULL);
 	assert(frame 	!= NULL);
