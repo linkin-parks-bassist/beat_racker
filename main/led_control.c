@@ -1,7 +1,7 @@
 #include "driver/gpio.h"
 #include "led_control.h"
 
-int which_led;
+static int which_led;
 int active;
 
 int init_leds()
@@ -17,7 +17,7 @@ int init_leds()
 
 void swap_leds()
 {
-	/* This looks silly; I should just write which_led = 1 - which_led,
+	/* This looks silly; I should just write "which_led = 1 - which_led",
 	 * but I am accounting for the possibility that which_led has been
 	 * inexplicably set to a value that is not either 0 or 1. */
 	if (which_led)

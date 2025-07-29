@@ -8,7 +8,6 @@ int init_leds();
 void swap_leds();
 void update_leds();
 
-extern int which_led;
 extern int active;
 
 #endif
