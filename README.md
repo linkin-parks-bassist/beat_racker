@@ -38,7 +38,18 @@ in the root folder with an ESP32 board connected.
 
 ## Pins
 
-The pin configuration is hard-coded via macros in [led_control.h](main/led_control.h) and [mic.h](main/mic.h). These can be modified freely to suit your set-up.
+The pin configuration is hard-coded via macros in [led_control.h](main/led_control.h) and [mic.h](main/mic.h). These can be modified freely to suit your set-up. The default values are
+
+``` led_control.h
+#define LED_PIN_1 GPIO_NUM_26
+#define LED_PIN_2 GPIO_NUM_27
+```
+
+``` mic.h
+#define I2S_SCK  33
+#define I2S_WS   25
+#define I2S_SD   32
+````
 
 ## Compatibility
 
